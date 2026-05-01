@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#080d1a"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <title>Eli</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#080d1a;--sf:rgba(255,255,255,.05);--sf2:rgba(255,255,255,.09);
+      --bd:rgba(255,255,255,.09);--tx:#e8eaf2;--mu:rgba(232,234,242,.45);
+      --ac:#4f8ef7;--ac2:#7c5fdc;--gw:rgba(79,142,247,.28);
+      --gr:#22d3a0;--gg:rgba(34,211,160,.28);--er:#f7674f;
+    }
+    html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased}
+    .orbs{position:fixed;inset:0;pointer-events:none;z-index:0}
+    .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.14}
+    .o1{width:380px;height:380px;background:#4f8ef7;top:-90px;left:-90px;animation:d1 20s ease-in-out infinite}
+    .o2{width:280px;height:280px;background:#7c5fdc;bottom:-70px;right:-50px;animation:d2 25s ease-in-out infinite}
+    .o3{width:180px;height:180px;background:#22d3a0;top:45%;left:55%;animation:d3 17s ease-in-out infinite}
+    @keyframes d1{0%,100%{transform:translate(0,0)}50%{transform:translate(35px,28px)}}
+    @keyframes d2{0%,100%{transform:translate(0,0)}50%{transform:translate(-25px,-18px)}}
+    @keyframes d3{0%,100%{transform:translate(0,0)}50%{transform:translate(-18px,22px)}}
+    .app{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column}
+    /* topbar */
+    .top{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 8px;flex-shrink:0}
+    .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;background:linear-gradient(135deg,var(--ac),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .clk{font-family:'Syne',sans-serif;font-weight:700;font-size:20px;text-align:right}
+    .dt{font-size:11px;color:var(--mu);text-align:right;margin-top:1px}
+    /* status */
+    .sbar{display:flex;align-items:center;gap:8px;padding:2px 20px 8px;flex-shrink:0}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--mu);transition:all .3s;flex-shrink:0}
+    .dot.ls{background:var(--gr);box-shadow:0 0 8px var(--gg);animation:bl 1.4s ease-in-out infinite}
+    .dot.pr{background:var(--ac);box-shadow:0 0 8px var(--gw);animation:bl .9s ease-in-out infinite}
+    .dot.er{background:var(--er)}
+    @keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
+    .stx{font-size:12px;color:var(--mu)}
+    .wvs{display:flex;align-items:center;gap:3px;height:22px;opacity:0;transition:opacity .3s}
+    .wvs.on{opacity:1}
+    .wb{width:3px;border-radius:2px;background:var(--gr);animation:wa 1s ease-in-out infinite}
+    .wb:nth-child(1){animation-delay:.0s}.wb:nth-child(2){animation-delay:.1s}.wb:nth-child(3){animation-delay:.2s}
+    .wb:nth-child(4){animation-delay:.3s}.wb:nth-child(5){animation-delay:.2s}.wb:nth-child(6){animation-delay:.1s}.wb:nth-child(7){animation-delay:.0s}
+    @keyframes wa{0%,100%{height:5px}50%{height:19px}}
+    /* messages */
+    .msgs{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 16px;display:flex;flex-direction:column;gap:11px;scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:var(--bd) transparent}
+    .msgs::-webkit-scrollbar{width:3px}.msgs::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+    .msg{display:flex;flex-direction:column;gap:3px;animation:mi .28s ease-out}
+    @keyframes mi{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+    .lbl{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:0 4px}
+    .u .lbl{color:rgba(79,142,247,.65)}.e .lbl{color:rgba(34,211,160,.65)}
+    .bbl{padding:10px 14px;border-radius:14px;line-height:1.65;font-size:14px;word-wrap:break-word}
+    .u .bbl{background:rgba(79,142,247,.11);border:1px solid rgba(79,142,247,.2);border-radius:14px 14px 4px 14px}
+    .e .bbl{background:var(--sf);border:1px solid var(--bd);border-radius:14px 14px 14px 4px}
+    .e .bbl strong{color:var(--ac)}.e .bbl em{color:rgba(232,234,242,.65)}
+    .dots{display:flex;gap:5px;align-items:center;padding:3px 0}
+    .dots span{width:6px;height:6px;border-radius:50%;background:var(--ac);opacity:.5;animation:bo 1.2s ease-in-out infinite}
+    .dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+    @keyframes bo{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-8px)}}
+    /* mic */
+    .mica{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:9px;padding:8px 20px 14px}
+    .hint{font-size:11px;color:var(--mu);text-align:center}
+    .hint b{color:var(--ac);font-weight:500}
+    .mwrap{position:relative;display:flex;align-items:center;justify-content:center}
+    .ring{position:absolute;width:82px;height:82px;border-radius:50%;border:2px solid var(--gr);opacity:0;transform:scale(.85);transition:all .3s;pointer-events:none}
+    .ring.on{opacity:.45;transform:scale(1.12);animation:rp 1.6s ease-in-out infinite}
+    @keyframes rp{0%,100%{transform:scale(1.1);opacity:.4}50%{transform:scale(1.28);opacity:.1}}
+    .mbtn{position:relative;z-index:2;width:70px;height:70px;border-radius:50%;border:1.5px solid var(--bd);cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--sf2);transition:all .22s;-webkit-tap-highlight-color:transparent;color:var(--tx)}
+    .mbtn:active{transform:scale(.92)}
+    .mbtn.ls{background:rgba(34,211,160,.14);border-color:var(--gr);box-shadow:0 0 18px var(--gg)}
+    .mbtn.pr{background:rgba(79,142,247,.14);border-color:var(--ac);box-shadow:0 0 18px var(--gw)}
+    /* input */
+    .irow{display:flex;gap:8px;padding:0 16px 16px;flex-shrink:0}
+    .tinp{flex:1;background:var(--sf);border:1px solid var(--bd);border-radius:24px;padding:10px 16px;font-size:14px;color:var(--tx);font-family:'DM Sans',sans-serif;outline:none;caret-color:var(--ac)}
+    .tinp::placeholder{color:var(--mu)}.tinp:focus{border-color:rgba(79,142,247,.4)}
+    .sbtn{width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;background:var(--ac);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s}
+    .sbtn:active{transform:scale(.9)}
+    /* setup */
+    .setup{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px;transition:opacity .5s}
+    .setup.hide{opacity:0;pointer-events:none}
+    .slogo{font-family:'Syne',sans-serif;font-weight:800;font-size:54px;background:linear-gradient(135deg,var(--ac),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .stitle{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;text-align:center}
+    .sdesc{font-size:13px;color:var(--mu);text-align:center;line-height:1.75;max-width:290px}
+    .sdesc a{color:var(--ac);text-decoration:none}
+    .sinp{width:100%;max-width:320px;background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--tx);font-family:'DM Sans',sans-serif;outline:none}
+    .sinp:focus{border-color:rgba(79,142,247,.5)}
+    .sgo{width:100%;max-width:320px;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;font-family:'Syne',sans-serif;font-weight:800;font-size:16px;cursor:pointer}
+    .swarn{font-size:11px;color:var(--mu);text-align:center;max-width:270px;line-height:1.6}
+    .swarn a{color:var(--er);text-decoration:none}
+    .keybtn{position:fixed;bottom:12px;right:12px;z-index:10;background:transparent;border:1px solid var(--bd);border-radius:8px;color:var(--mu);font-size:10px;padding:4px 8px;cursor:pointer;font-family:'DM Sans',sans-serif}
+  </style>
+</head>
+<body>
+
+<div class="setup" id="setup">
+  <div class="slogo">eli</div>
+  <div class="stitle">Configura tu asistente</div>
+  <div class="sdesc">
+    Necesitas una API Key gratuita de Google Gemini.<br/>
+    Consíguela en <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>
+  </div>
+  <input class="sinp" id="keyinp" type="password" placeholder="AIzaSy..." autocomplete="off"/>
+  <button class="sgo" onclick="saveKey()">Activar Eli ✦</button>
+  <div class="swarn">
+    La clave se guarda solo en este dispositivo.<br/>
+    <a href="https://aistudio.google.com/apikey" target="_blank">⚠ Nunca compartas tu API Key con nadie</a>
+  </div>
+</div>
+
+<div class="orbs"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+
+<div class="app">
+  <div class="top">
+    <div class="logo">eli ✦</div>
+    <div><div class="clk" id="clk">--:--</div><div class="dt" id="dt"></div></div>
+  </div>
+  <div class="sbar">
+    <div class="dot" id="dot"></div>
+    <div class="wvs" id="wvs">
+      <div class="wb"></div><div class="wb"></div><div class="wb"></div>
+      <div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div>
+    </div>
+    <span class="stx" id="stx">Iniciando...</span>
+  </div>
+  <div class="msgs" id="msgs">
+    <div class="msg e">
+      <span class="lbl">Eli</span>
+      <div class="bbl">Hola 👋 Soy <strong>Eli</strong>. Di <em>"Eli"</em> cuando quieras hablar, o escríbeme abajo.</div>
+    </div>
+  </div>
+  <div class="mica">
+    <div class="hint" id="hint"><b>"Eli"</b> — estoy escuchando</div>
+    <div class="mwrap">
+      <div class="ring" id="ring"></div>
+      <button class="mbtn" id="mbtn" onclick="onMicTap()">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect x="9" y="2" width="10" height="14" rx="5" fill="currentColor" opacity=".9"/>
+          <path d="M5 13c0 4.97 4.03 9 9 9s9-4.03 9-9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="14" y1="22" x2="14" y2="26" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="10" y1="26" x2="18" y2="26" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="irow">
+    <input class="tinp" id="tinp" type="text" placeholder="Escribe tu pregunta..."
+      onkeydown="if(event.key==='Enter')sendTxt()"/>
+    <button class="sbtn" onclick="sendTxt()">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M2 9L16 9M10 3L16 9L10 15" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+</div>
+<button class="keybtn" onclick="resetKey()">⚙ API Key</button>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────
+const MODEL = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
+const WAKE  = ['eli','ely','elí','oye eli','hey eli'];
+const SYS   = `Eres Eli, una asistente personal inteligente y amable.
+Respondes en español de España. Directa y concisa, pero completa cuando hace falta.
+No empieces con "Claro" ni "Por supuesto". Ve al grano.
+Si te preguntan tu nombre, eres Eli. No menciones Gemini ni Google.
+Usa **negrita** solo cuando mejore la lectura.`;
+
+let KEY  = localStorage.getItem('eli_key') || '';
+let hist = [];
+let busy = false;
+
+// Estado del reconocedor
+// 'wake'      → escuchando en modo continuo esperando "Eli"
+// 'question'  → escuchando la pregunta del usuario
+// 'manual'    → escucha manual lanzada por botón
+// 'off'       → parado
+let phase = 'off';
+let rec   = null;   // instancia única de SpeechRecognition
+let recStarted = false;
+
+// ── SETUP ─────────────────────────────────────────────────────────────────
+function saveKey() {
+  const v = document.getElementById('keyinp').value.trim();
+  if (v.length < 20) { alert('Pega una API Key válida (empieza por AIzaSy...)'); return; }
+  KEY = v; localStorage.setItem('eli_key', v);
+  document.getElementById('setup').classList.add('hide');
+  boot();
+}
+function resetKey() {
+  localStorage.removeItem('eli_key'); KEY = '';
+  document.getElementById('keyinp').value = '';
+  document.getElementById('setup').classList.remove('hide');
+  stopRec();
+}
+
+// ── CLOCK ─────────────────────────────────────────────────────────────────
+function tick() {
+  const n=new Date();
+  document.getElementById('clk').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  const D=['dom','lun','mar','mié','jue','vie','sáb'],M=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  document.getElementById('dt').textContent=D[n.getDay()]+' '+n.getDate()+' '+M[n.getMonth()];
+}
+setInterval(tick,1000); tick();
+
+// ── STATUS ────────────────────────────────────────────────────────────────
+function st(cls, txt) {
+  document.getElementById('dot').className  = 'dot'+(cls?' '+cls:'');
+  document.getElementById('stx').textContent = txt;
+  document.getElementById('wvs').className  = 'wvs'+(cls==='ls'?' on':'');
+  document.getElementById('mbtn').className = 'mbtn'+(cls==='ls'?' ls':cls==='pr'?' pr':'');
+  document.getElementById('ring').className = 'ring'+(cls==='ls'?' on':'');
+}
+
+// ── MESSAGES ──────────────────────────────────────────────────────────────
+function addMsg(role, html, typing=false) {
+  const w=document.getElementById('msgs');
+  const d=document.createElement('div'); d.className='msg '+role;
+  const l=document.createElement('span'); l.className='lbl'; l.textContent=role==='u'?'Tú':'Eli';
+  const b=document.createElement('div'); b.className='bbl';
+  if (typing){b.innerHTML='<div class="dots"><span></span><span></span><span></span></div>';d.id='tmsg';}
+  else b.innerHTML=md(html);
+  d.appendChild(l); d.appendChild(b); w.appendChild(d);
+  w.scrollTop=w.scrollHeight;
+}
+function rmT(){const t=document.getElementById('tmsg');if(t)t.remove();}
+function md(t){
+  return t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+          .replace(/\*(.*?)\*/g,'<em>$1</em>')
+          .replace(/`([^`]+)`/g,'<code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px;font-size:12px">$1</code>')
+          .replace(/\n\n/g,'<br/><br/>').replace(/\n/g,'<br/>');
+}
+
+// ── GEMINI ────────────────────────────────────────────────────────────────
+async function ask(text) {
+  hist.push({role:'user',parts:[{text}]});
+  const r=await fetch(MODEL+'?key='+KEY,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      system_instruction:{parts:[{text:SYS}]},
+      contents:hist,
+      generationConfig:{temperature:0.8,maxOutputTokens:1024}
+    })
+  });
+  if(!r.ok){
+    const e=await r.json().catch(()=>({}));
+    if(r.status===400||r.status===403)throw new Error('API_KEY');
+    if(r.status===429)throw new Error('QUOTA');
+    throw new Error(e?.error?.message||'HTTP '+r.status);
+  }
+  const d=await r.json();
+  const rep=d.candidates?.[0]?.content?.parts?.[0]?.text||'Sin respuesta.';
+  hist.push({role:'model',parts:[{text:rep}]});
+  return rep;
+}
+
+async function query(text) {
+  if(!text.trim()||busy)return;
+  busy=true;
+  addMsg('u',text); addMsg('e','',true);
+  st('pr','Pensando...');
+  try{
+    const rep=await ask(text);
+    rmT(); addMsg('e',rep); speak(rep);
+    st('','Di "Eli" para continuar...');
+    // Volver a modo wake automáticamente
+    setTimeout(()=>enterWakePhase(), 500);
+  }catch(e){
+    rmT();
+    if(e.message==='API_KEY') addMsg('e','❌ **API Key inválida.** Pulsa ⚙ API Key (esquina inferior derecha) e introduce una clave nueva.');
+    else if(e.message==='QUOTA') addMsg('e','❌ **Demasiadas peticiones.** Espera 30 segundos e inténtalo de nuevo.');
+    else addMsg('e','❌ Error: _'+e.message+'_');
+    st('er','Error'); setTimeout(()=>{st('','Di "Eli"...');enterWakePhase();},3000);
+  }
+  busy=false;
+}
+
+// ── TTS ───────────────────────────────────────────────────────────────────
+function speak(text){
+  if(!window.speechSynthesis)return;
+  speechSynthesis.cancel();
+  const clean=text.replace(/<[^>]+>/g,'').replace(/[*`#]/g,'').slice(0,600);
+  const u=new SpeechSynthesisUtterance(clean);
+  u.lang='es-ES'; u.rate=1.05; u.pitch=1;
+  const vv=speechSynthesis.getVoices();
+  const v=vv.find(v=>v.lang.startsWith('es')&&/female|mujer|Monica|Paulina|Conchita|Helena/i.test(v.name))||vv.find(v=>v.lang.startsWith('es'));
+  if(v)u.voice=v;
+  speechSynthesis.speak(u);
+}
+speechSynthesis.getVoices();
+speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
+
+// ── RECONOCIMIENTO DE VOZ (UNA SOLA INSTANCIA CONTINUA) ──────────────────
+//
+// La clave para evitar el pitido en Android es crear UNA SOLA instancia
+// con continuous:true y cambiar el "phase" internamente sin reiniciar.
+// El pitido ocurre cada vez que se llama a .start() — si solo lo llamamos
+// una vez al arrancar, no vuelve a sonar.
+
+function buildRec() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+  const r = new SR();
+  r.lang = 'es-ES';
+  r.continuous = true;
+  r.interimResults = true;
+  r.maxAlternatives = 1;
+
+  let lastFinal = '';
+
+  r.onresult = (e) => {
+    let interimTxt = '';
+    let finalTxt   = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) finalTxt += t;
+      else interimTxt += t;
+    }
+
+    const combined = (finalTxt || interimTxt).toLowerCase().trim();
+
+    if (phase === 'wake') {
+      // Buscamos "Eli" en lo que se va diciendo (interim o final)
+      if (WAKE.some(w => combined.includes(w))) {
+        lastFinal = '';
+        enterQuestionPhase();
+      }
+    } else if (phase === 'question' || phase === 'manual') {
+      // Acumulamos el texto final
+      if (finalTxt) {
+        lastFinal += finalTxt;
+        // Esperamos una pequeña pausa (el evento onresult deja de llegar)
+        clearTimeout(r._silenceTimer);
+        r._silenceTimer = setTimeout(() => {
+          const q = lastFinal.trim();
+          lastFinal = '';
+          if (q.length > 1 && !busy) {
+            // Quitar wake word del inicio si el usuario lo repitió
+            let clean = q;
+            WAKE.forEach(w => { clean = clean.replace(new RegExp('^'+w+'[,. ]*','i'),''); });
+            clean = clean.trim();
+            if (clean.length > 1) {
+              phase = 'busy';
+              st('','Procesando...');
+              query(clean);
+            } else {
+              enterWakePhase();
+            }
+          }
+        }, 1200); // 1.2 seg de silencio = fin de frase
+      }
+    }
+  };
+
+  r.onerror = (e) => {
+    if (e.error === 'not-allowed') { st('er','Permiso de micrófono denegado'); return; }
+    if (e.error === 'no-speech' || e.error === 'aborted') return;
+    // Reiniciar si hay error inesperado
+    recStarted = false;
+    setTimeout(() => startRec(), 1000);
+  };
+
+  r.onend = () => {
+    recStarted = false;
+    // Si terminó sin que lo paráramos, reiniciar
+    if (phase !== 'off' && !busy) {
+      setTimeout(() => startRec(), 500);
+    }
+  };
+
+  return r;
+}
+
+function startRec() {
+  if (recStarted || phase === 'off') return;
+  if (!rec) rec = buildRec();
+  if (!rec) { st('er','Navegador sin soporte de voz'); return; }
+  try { rec.start(); recStarted = true; } catch(ex) {}
+}
+
+function stopRec() {
+  phase = 'off';
+  if (rec) { try { rec.stop(); } catch(e){} recStarted = false; }
+}
+
+function enterWakePhase() {
+  if (phase === 'off') return;
+  phase = 'wake';
+  st('','Di "Eli" para hablar conmigo');
+  document.getElementById('hint').innerHTML = '<b>"Eli"</b> — estoy escuchando';
+  document.getElementById('ring').className = 'ring'; // apagar anillo
+}
+
+function enterQuestionPhase() {
+  phase = 'question';
+  st('ls','Te escucho... habla ahora');
+  document.getElementById('ring').className = 'ring on';
+  document.getElementById('hint').innerHTML = 'Escuchando tu pregunta...';
+}
+
+// ── BOTÓN MANUAL ──────────────────────────────────────────────────────────
+function onMicTap() {
+  if (busy) return;
+  if (phase === 'question' || phase === 'manual') {
+    // Segundo toque = cancelar
+    enterWakePhase(); return;
+  }
+  phase = 'manual';
+  st('ls','Escuchando...');
+  document.getElementById('ring').className = 'ring on';
+  document.getElementById('hint').textContent = 'Habla ahora...';
+}
+
+// ── TEXT INPUT ────────────────────────────────────────────────────────────
+function sendTxt(){
+  const i=document.getElementById('tinp');const v=i.value.trim();if(!v)return;i.value='';
+  phase='busy'; query(v);
+}
+
+// ── BOOT ─────────────────────────────────────────────────────────────────
+// Una sola llamada a .start() al arrancar = un solo pitido al inicio, nunca más
+function boot() {
+  phase = 'wake';
+  rec = buildRec();
+  if (!rec) { st('er','Tu navegador no soporta reconocimiento de voz. Usa el teclado.'); return; }
+
+  navigator.mediaDevices.getUserMedia({audio:true})
+    .then(s => {
+      s.getTracks().forEach(t=>t.stop());
+      // Ya tenemos permiso — lanzar el reconocedor
+      startRec();
+      st('','Di "Eli" para hablar conmigo');
+    })
+    .catch(() => {
+      st('er','Sin permiso de micrófono — usa el teclado');
+    });
+}
+
+if (KEY.length > 20) { document.getElementById('setup').classList.add('hide'); boot(); }
+</script>
+</body>
+</html>
