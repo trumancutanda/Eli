@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eli Assistant - Universal 2026</title>
+    <style>
+        body { margin: 0; padding: 0; background: #000; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; overflow: hidden; }
+        #clock { font-size: 5rem; color: #1a1a1a; margin-bottom: 10px; }
+        #status-label { color: #00f2ff; font-weight: bold; letter-spacing: 2px; font-size: 1.2rem; }
+        #response-text { font-size: 1.4rem; max-width: 85%; color: #ccc; margin-top: 20px; max-height: 35vh; overflow-y: auto; }
+        #debug-console { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,10,10,0.95); color: #00ff00; font-family: monospace; font-size: 0.75rem; text-align: left; padding: 15px; border-top: 1px solid #333; max-height: 150px; overflow-y: auto; z-index: 1000; }
+        #setup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; z-index: 100; cursor: pointer; }
+        .active { color: #00ff00 !important; text-shadow: 0 0 10px #00ff00; }
+        .err { color: #ff4444; }
+    </style>
+</head>
+<body>
+
+    <div id="setup-overlay" onclick="startAssistant()">
+        <div style="border: 2px solid #00f2ff; padding: 40px; border-radius: 60px;">
+            <h1 style="margin:0">DESPERTAR A ELI</h1>
+            <p style="color: #555">Sincronizando con Google AI Studio...</p>
+        </div>
+    </div>
+
+    <div id="clock">00:00</div>
+    <div id="status-label">APAGADA</div>
+    <div id="response-text">Toca el botón para iniciar el diagnóstico.</div>
+    
+    <div id="debug-console"><b>Consola de Eli v2026:</b><br></div>
+
+    <script>
+        const API_KEY = "AIzaSyDDcXk5i-DyJC3QBmanGyH-NXkeHLapZ_w";
+        let CURRENT_MODEL = "";
+        let API_VERSION = "v1beta"; // Intentaremos ambas
+
+        const log = (msg, isError = false) => {
+            const c = document.getElementById('debug-console');
+            const span = document.createElement('div');
+            if(isError) span.className = 'err';
+            span.innerHTML = `> ${msg}`;
+            c.appendChild(span);
+            c.scrollTop = c.scrollHeight;
+        };
+
+        function updateClock() {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        async function startAssistant() {
+            document.getElementById('setup-overlay').style.display = 'none';
+            log("Iniciando búsqueda de cerebro...");
+            await fullDiagnostic();
+            if(CURRENT_MODEL) initSpeech();
+        }
+
+        async function fullDiagnostic() {
+            const versions = ["v1beta", "v1"];
+            const baseModels = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-pro"];
+
+            for (let v of versions) {
+                log(`Probando versión de API: ${v}...`);
+                try {
+                    const resp = await fetch(`https://generativelanguage.googleapis.com/${v}/models?key=${API_KEY}`);
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        const found = data.models.find(m => m.name.includes("flash") && m.supportedGenerationMethods.includes("generateContent"));
+                        if (found) {
+                            CURRENT_MODEL = found.name;
+                            API_VERSION = v;
+                            log(`¡Éxito! Modelo detectado: ${CURRENT_MODEL} (${v})`);
+                            break;
+                        }
+                    } else {
+                        const err = await resp.json();
+                        log(`API ${v} rechazada: ${err.error.message}`, true);
+                    }
+                } catch (e) {
+                    log(`Error de red en ${v}: ${e.message}`, true);
+                }
+            }
+
+            if (!CURRENT_MODEL) {
+                log("Fallo masivo. Intentando forzar modelos conocidos...", true);
+                for (let m of baseModels) {
+                    log(`Forzando models/${m}...`);
+                    const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${API_KEY}`;
+                    try {
+                        const r = await fetch(testUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ contents: [{ parts: [{ text: "hi" }] }] })
+                        });
+                        if (r.ok) {
+                            CURRENT_MODEL = `models/${m}`;
+                            API_VERSION = "v1beta";
+                            log(`¡Conectado a la fuerza con ${m}!`);
+                            break;
+                        } else {
+                            const err = await r.json();
+                            log(`Modelo ${m} falló: ${err.error.code} - ${err.error.status}`, true);
+                        }
+                    } catch (e) { log(`Error red en ${m}: ${e.message}`, true); }
+                }
+            }
+
+            if (CURRENT_MODEL) {
+                document.getElementById('status-label').innerText = "ELI ONLINE";
+                document.getElementById('status-label').classList.add('active');
+                document.getElementById('response-text').innerText = "¡Lista! Di 'Eli' y tu pregunta.";
+            } else {
+                document.getElementById('response-text').innerText = "Error crítico. Mira la consola abajo.";
+            }
+        }
+
+        function initSpeech() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const rec = new SpeechRecognition();
+            rec.continuous = true;
+            rec.interimResults = true;
+            rec.lang = 'es-ES';
+
+            rec.onresult = (event) => {
+                let text = "";
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    text += event.results[i][0].transcript;
+                }
+                if (text.toLowerCase().includes("eli") && event.results[event.results.length - 1].isFinal) {
+                    const q = text.toLowerCase().split("eli").pop().trim();
+                    if (q.length > 1) callGemini(q);
+                }
+            };
+
+            rec.onend = () => rec.start();
+            rec.start();
+            log("Micrófono activado. Esperando comando...");
+        }
+
+        async function callGemini(prompt) {
+            document.getElementById('status-label').innerText = "PENSANDO...";
+            log(`Enviando consulta a ${CURRENT_MODEL}...`);
+            try {
+                const url = `https://generativelanguage.googleapis.com/${API_VERSION}/${CURRENT_MODEL}:generateContent?key=${API_KEY}`;
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                const data = await res.json();
+                const reply = data.candidates[0].content.parts[0].text;
+                document.getElementById('response-text').innerText = reply;
+                
+                const ut = new SpeechSynthesisUtterance(reply.replace(/[*#]/g, ""));
+                ut.lang = 'es-ES';
+                window.speechSynthesis.speak(ut);
+                ut.onend = () => document.getElementById('status-label').innerText = "ELI ONLINE";
+            } catch (e) { log("Error en chat: " + e.message, true); }
+        }
+    </script>
+</body>
+</html>
